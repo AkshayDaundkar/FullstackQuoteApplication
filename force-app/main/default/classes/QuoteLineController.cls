@@ -128,4 +128,30 @@ public with sharing class QuoteLineController {
         if (!linesToUpdate.isEmpty()) update linesToUpdate;
     }
 
+    //7 Undo Amendments
+    @AuraEnabled
+    public static void undoAmendments(List<Id> amendedQuoteLineIds) {
+        List<SBQQ_QuoteLine__c> amendedLines = [SELECT Id, SBQQ_AmendedFrom__c FROM SBQQ_QuoteLine__c WHERE Id IN :amendedQuoteLineIds];
+        List<SBQQ_QuoteLine__c> originalsToRestore = new List<SBQQ_QuoteLine__c>();
+        Set<Id> originalIds = new Set<Id>();
+
+        for (SBQQ_QuoteLine__c line : amendedLines) {
+            if (line.SBQQ_AmendedFrom__c != null) {
+                originalIds.add(line.SBQQ_AmendedFrom__c);
+            }
+        }
+
+        if (!originalIds.isEmpty()) {
+            originalsToRestore = [SELECT Id, SBQQ_Quantity__c, SBQQ_NetPrice__c FROM SBQQ_QuoteLine__c WHERE Id IN :originalIds];
+            for (SBQQ_QuoteLine__c orig : originalsToRestore) {
+                orig.SBQQ_Quantity__c = 1; // You can optionally store and restore the previous values via custom fields
+                orig.SBQQ_AmendType__c = null;
+            }
+        }
+
+        delete amendedLines;
+        update originalsToRestore;
+    }
+
+
 }

@@ -15,6 +15,7 @@
                     <div class="slds-m-around_medium">
                         <lightning-button label="Download CSV" onclick={handleDownloadCSV} class="slds-m-right_small"></lightning-button>
                         <lightning-button label="Cancel Selected" onclick={handleCancelSelected} class="slds-m-right_small"></lightning-button>
+                        <lightning-button label="Undo Amendment" onclick={handleUndoAmendment} class="slds-m-right_small"></lightning-button>
                         <lightning-button variant="brand" label="Save Changes" onclick={triggerSave}></lightning-button>
                     </div>
                     <lightning-datatable
@@ -29,9 +30,10 @@
                         show-row-number-column>
                     </lightning-datatable>
                 </lightning-tab>
-                <lightning-tab label="Products">
+
+                <lightning-tab label={productTabLabel}>
                     <div class="slds-m-around_medium">
-                       <template if:true={hasProductSummary}>
+                        <template if:true={hasProductSummary}>
                             <lightning-datatable
                                 key-field="productId"
                                 data={productSummary}
