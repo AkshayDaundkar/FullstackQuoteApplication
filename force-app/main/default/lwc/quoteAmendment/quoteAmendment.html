@@ -1,0 +1,55 @@
+<template>
+    <lightning-card title="Quote Amendment">
+        <template if:true={quote}>
+            <!-- HEADER -->
+            <div class="slds-m-around_medium">
+                <p><strong>Quote Number:</strong> {quote.Name}</p>
+                <p><strong>Fulfillment Frequency:</strong> {quote.SBQQ_FulfillmentFrequency__c}</p>
+                <p><strong>Start Date:</strong> {quote.SBQQ_StartDate__c}</p>
+                <p><strong>End Date:</strong> {quote.SBQQ_EndDate__c}</p>
+            </div>
+
+            <!-- TABSET -->
+            <lightning-tabset>
+                <lightning-tab label="QuoteLines">
+                    <div class="slds-m-around_medium">
+                        <lightning-button label="Download CSV" onclick={handleDownloadCSV} class="slds-m-right_small"></lightning-button>
+                        <lightning-button label="Cancel Selected" onclick={handleCancelSelected} class="slds-m-right_small"></lightning-button>
+                        <lightning-button variant="brand" label="Save Changes" onclick={triggerSave}></lightning-button>
+                    </div>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={quoteLines}
+                        columns={quoteLineColumns}
+                        onsave={handleSaveChanges}
+                        draft-values={draftValues}
+                        selected-rows={selectedQuoteLineIds}
+                        onrowselection={handleRowSelection}
+                        hide-checkbox-column={hideCheckboxColumn}
+                        show-row-number-column>
+                    </lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label="Products">
+                    <div class="slds-m-around_medium">
+                       <template if:true={hasProductSummary}>
+                            <lightning-datatable
+                                key-field="productId"
+                                data={productSummary}
+                                columns={productColumns}
+                                hide-checkbox-column
+                                show-row-number-column>
+                            </lightning-datatable>
+                        </template>
+                        <template if:true={noProductSummary}>
+                            <p>No products found.</p>
+                        </template>
+                    </div>
+                </lightning-tab>
+            </lightning-tabset>
+        </template>
+
+        <template if:false={quote}>
+            <p class="slds-p-around_medium">Loading quote...</p>
+        </template>
+    </lightning-card>
+</template>
