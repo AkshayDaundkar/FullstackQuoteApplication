@@ -88,4 +88,44 @@ public with sharing class QuoteLineController {
     public static void deleteQuoteLine(Id quoteLineId) {
         delete [SELECT Id FROM SBQQ_QuoteLine__c WHERE Id = :quoteLineId];
     }
+
+    //6 Cancel QuoteLines
+    @AuraEnabled
+    public static void cancelQuoteLines(List<Id> quoteLineIds) {
+        List<SBQQ_QuoteLine__c> linesToUpdate = new List<SBQQ_QuoteLine__c>();
+        List<SBQQ_QuoteLine__c> linesToDelete = new List<SBQQ_QuoteLine__c>();
+
+        Map<Id, SBQQ_QuoteLine__c> qlMap = new Map<Id, SBQQ_QuoteLine__c>(
+            [SELECT Id, SBQQ_AmendedFrom__c FROM SBQQ_QuoteLine__c WHERE Id IN :quoteLineIds]
+        );
+
+        Set<Id> amendedFromIds = new Set<Id>();
+
+        for (SBQQ_QuoteLine__c line : qlMap.values()) {
+            if (line.SBQQ_AmendedFrom__c != null) {
+                // Amended line → delete it, update original
+                linesToDelete.add(line);
+                amendedFromIds.add(line.SBQQ_AmendedFrom__c);
+            } else {
+                // Original line → mark as cancelled
+                line.SBQQ_Quantity__c = 0;
+                line.SBQQ_AmendType__c = 'Cancel Product';
+                linesToUpdate.add(line);
+            }
+        }
+
+        if (!amendedFromIds.isEmpty()) {
+            List<SBQQ_QuoteLine__c> originals = [
+                SELECT Id FROM SBQQ_QuoteLine__c WHERE Id IN :amendedFromIds
+            ];
+            for (SBQQ_QuoteLine__c o : originals) {
+                o.SBQQ_AmendType__c = 'Cancel Product';
+            }
+            linesToUpdate.addAll(originals);
+        }
+
+        if (!linesToDelete.isEmpty()) delete linesToDelete;
+        if (!linesToUpdate.isEmpty()) update linesToUpdate;
+    }
+
 }

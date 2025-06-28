@@ -5,6 +5,7 @@ import getProductSummaryByQuoteId from '@salesforce/apex/QuoteLineController.get
 import insertQuoteLine from '@salesforce/apex/QuoteLineController.insertQuoteLine';
 import updateQuoteLine from '@salesforce/apex/QuoteLineController.updateQuoteLine';
 import { refreshApex } from '@salesforce/apex';
+import cancelQuoteLines from '@salesforce/apex/QuoteLineController.cancelQuoteLines';
 
 
 export default class QuoteAmendment extends LightningElement {
@@ -77,12 +78,22 @@ export default class QuoteAmendment extends LightningElement {
         return !this.hasProductSummary;
     }
 
-
-    
-
     handleCancelSelected() {
-        console.log('TODO: Handle cancel logic');
+        if (!this.selectedQuoteLineIds.length) {
+            console.warn('No QuoteLines selected for cancellation.');
+            return;
+        }
+
+        cancelQuoteLines({ quoteLineIds: this.selectedQuoteLineIds })
+            .then(() => {
+                this.selectedQuoteLineIds = [];
+                return refreshApex(this.wiredQuoteLinesResult);
+            })
+            .catch(error => {
+                console.error('Cancel Error:', JSON.stringify(error));
+            });
     }
+
 
     handleDownloadCSV() {
         if (!this.quoteLines.length) {
