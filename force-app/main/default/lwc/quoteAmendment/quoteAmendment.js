@@ -85,29 +85,44 @@ export default class QuoteAmendment extends LightningElement {
     }
 
     handleDownloadCSV() {
-        const headers = ['QuoteLine Number', 'Product Code', 'Order Account Name', 'Quantity', 'Net Price', 'Amend Type', 'Amended From'];
-        let csv = headers.join(',') + '\n';
+        if (!this.quoteLines.length) {
+            console.warn('No quote lines to download.');
+            return;
+        }
 
-        this.quoteLines.forEach(line => {
-            csv += [
-                line.Name,
-                line.ProductCode__c,
-                line.SBQQ_OrderAccount__r?.Name || '',
-                line.SBQQ_Quantity__c,
-                line.SBQQ_NetPrice__c,
-                line.SBQQ_AmendType__c,
-                line.SBQQ_AmendedFrom__r?.Name || ''
-            ].join(',') + '\n';
-        });
+        const headers = [
+            'QuoteLine Number',
+            'Product Code',
+            'Order Account Name',
+            'Quantity',
+            'Net Price',
+            'Amend Type',
+            'Amended From'
+        ];
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const csvRows = this.quoteLines.map(line => [
+            line.Name,
+            line.ProductCode__c || '',
+            line.SBQQ_OrderAccount__r?.Name || '',
+            line.SBQQ_Quantity__c || '',
+            line.SBQQ_NetPrice__c || '',
+            line.SBQQ_AmendType__c || '',
+            line.SBQQ_AmendedFrom__r?.Name || ''
+        ]);
+
+        const csvContent = [headers, ...csvRows]
+            .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+            .join('\r\n');
+
+        // Use data URI for compatibility
+        const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        link.setAttribute('href', encodedUri);
         link.setAttribute('download', 'QuoteLines.csv');
-        document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
     }
+
+
 
 
    handleSaveChanges(event) {
