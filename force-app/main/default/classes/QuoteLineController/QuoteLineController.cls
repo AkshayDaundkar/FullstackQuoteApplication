@@ -1,6 +1,13 @@
 public with sharing class QuoteLineController {
 
     // 1. Get all QuoteLines related to a given Quote Id
+    /**
+     * Retrieves all QuoteLines associated with a specific Quote Id, It also filters out QuoteLines with a quantity of 0,
+     * and includes fields such as Name, Product, Product Code, Order Account, Quantity, Net Price, and Amendment details.
+     * This method is cacheable for performance optimization.
+     * @param quoteId The Id of the Quote for which to retrieve QuoteLines.
+     * @return A list of SBQQ_QuoteLine__c records related to the specified Quote Id.
+     */
     @AuraEnabled(cacheable=true)
     public static List<SBQQ_QuoteLine__c> getQuoteLinesByQuoteId(Id quoteId) {
         return [
@@ -23,6 +30,13 @@ public with sharing class QuoteLineController {
     }
 
     // 2. Group by Product and return total quantity per product
+    /**
+     * Retrieves a summary of products associated with a specific Quote Id, grouping by product and summing the quantities.
+     * This method returns a list of ProductSummaryWrapper objects containing product details and total quantity.
+     * @param quoteId The Id of the Quote for which to retrieve product summaries.
+     * @return A list of ProductSummaryWrapper objects summarizing products and their total quantities.
+     */
+    
     @AuraEnabled(cacheable=true)
     public static List<ProductSummaryWrapper> getProductSummaryByQuoteId(Id quoteId) {
         Map<Id, ProductSummaryWrapper> productMap = new Map<Id, ProductSummaryWrapper>();
@@ -144,7 +158,7 @@ public with sharing class QuoteLineController {
         if (!originalIds.isEmpty()) {
             originalsToRestore = [SELECT Id, SBQQ_Quantity__c, SBQQ_NetPrice__c FROM SBQQ_QuoteLine__c WHERE Id IN :originalIds];
             for (SBQQ_QuoteLine__c orig : originalsToRestore) {
-                orig.SBQQ_Quantity__c = 1; // You can optionally store and restore the previous values via custom fields
+                orig.SBQQ_Quantity__c = 1; 
                 orig.SBQQ_AmendType__c = null;
             }
         }

@@ -137,44 +137,6 @@ export default class QuoteAmendment extends LightningElement {
         link.click();
     }
 
-    // handleSaveChanges(event) {
-    //     const draftValues = event.detail.draftValues;
-    //     const updates = [], amendedLines = [];
-
-    //     draftValues.forEach(draft => {
-    //         const original = this.quoteLines.find(line => line.Id === draft.Id);
-    //         if (!original) return;
-
-    //         const quantityChanged = draft.SBQQ_Quantity__c !== undefined && draft.SBQQ_Quantity__c !== original.SBQQ_Quantity__c;
-    //         const priceChanged = draft.SBQQ_NetPrice__c !== undefined && draft.SBQQ_NetPrice__c !== original.SBQQ_NetPrice__c;
-
-    //         if (!quantityChanged && !priceChanged) return;
-
-    //         const amendType = [];
-    //         if (quantityChanged) amendType.push("Change Quantity");
-    //         if (priceChanged) amendType.push("Change Price");
-
-    //         amendedLines.push({
-    //             SBQQ_Quote__c: original.SBQQ_Quote__c,
-    //             SBQQ_Product__c: original.SBQQ_Product__c,
-    //             SBQQ_ProductCode__c: original.SBQQ_ProductCode__c,
-    //             SBQQ_OrderAccount__c: original.SBQQ_OrderAccount__c,
-    //             SBQQ_Quantity__c: draft.SBQQ_Quantity__c,
-    //             SBQQ_NetPrice__c: draft.SBQQ_NetPrice__c,
-    //             SBQQ_AmendedFrom__c: original.Id,
-    //             SBQQ_AmendType__c: amendType.join('; ')
-    //         });
-
-    //         updates.push({ Id: original.Id, SBQQ_Quantity__c: 0 });
-    //     });
-
-    //     Promise.all([
-    //         ...updates.map(u => updateQuoteLine({ ql: u })),
-    //         ...amendedLines.map(i => insertQuoteLine({ ql: i }))
-    //     ])
-    //         .then(() => refreshApex(this.wiredQuoteLinesResult))
-    //         .catch(error => console.error('Save Error:', JSON.stringify(error)));
-    // }
     handleSaveChanges(event) {
         const draftValues = event.detail.draftValues;
         const updates = [], amendedLines = [];
