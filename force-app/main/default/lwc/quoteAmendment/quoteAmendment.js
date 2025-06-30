@@ -7,6 +7,7 @@ import updateQuoteLine from '@salesforce/apex/QuoteLineController.updateQuoteLin
 import cancelQuoteLines from '@salesforce/apex/QuoteLineController.cancelQuoteLines';
 import undoAmendments from '@salesforce/apex/QuoteLineController.undoAmendments';
 import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class QuoteAmendment extends LightningElement {
     @api recordId;
@@ -90,21 +91,42 @@ export default class QuoteAmendment extends LightningElement {
     }
 
     handleCancelSelected() {
-        if (!this.selectedQuoteLineIds.length) return;
+        if (!this.selectedQuoteLineIds.length) {
+            this.showToast('Warning', 'Please select QuoteLines to cancel.', 'warning');
+            return;
+        };
         cancelQuoteLines({ quoteLineIds: this.selectedQuoteLineIds })
-            .then(() => refreshApex(this.wiredQuoteLinesResult))
-            .catch(error => console.error('Cancel Error:', JSON.stringify(error)));
+            .then(() => {
+                this.showToast('Success', 'Selected QuoteLines cancelled.', 'success');
+                refreshApex(this.wiredQuoteLinesResult)
+            })
+            .catch(error =>{ 
+                this.showToast('Error', 'Failed to cancel QuoteLines.', 'error');
+                console.error('Cancel Error:', JSON.stringify(error))
+            });
     }
 
     handleUndoAmendment() {
-        if (!this.selectedQuoteLineIds.length) return;
+        if (!this.selectedQuoteLineIds.length) {
+            this.showToast('Warning', 'Please select amended QuoteLines to undo.', 'warning');
+            return;
+        };
         undoAmendments({ amendedQuoteLineIds: this.selectedQuoteLineIds })
-            .then(() => refreshApex(this.wiredQuoteLinesResult))
-            .catch(error => console.error('Undo Error:', JSON.stringify(error)));
+            .then(() => {
+                this.showToast('Success', 'Selected amendments undone.', 'success');
+                refreshApex(this.wiredQuoteLinesResult)
+            })
+            .catch(error => {
+                this.showToast('Error', 'Failed to undo amendments.', 'error')
+                console.error('Undo Error:', JSON.stringify(error))
+        });
     }
 
     handleDownloadCSV() {
-        if (!this.quoteLines.length) return;
+        if (!this.quoteLines.length) {
+            this.showToast('Warning', 'No QuoteLines available to download.', 'warning');
+            return;
+        }
 
         const headers = [
             'QuoteLine Number',
@@ -135,6 +157,8 @@ export default class QuoteAmendment extends LightningElement {
         link.setAttribute('href', encodedUri);
         link.setAttribute('download', 'QuoteLines.csv');
         link.click();
+        this.showToast('Success', 'CSV file downloaded.', 'success');
+
     }
 
    handleSaveChanges(event) {
@@ -176,7 +200,7 @@ export default class QuoteAmendment extends LightningElement {
                 amendType = 'Change Quantity';
             } else if (priceChanged) {
                 amendType = 'Change Price';
-}
+            }
 
 
             amendedLines.push({
@@ -202,8 +226,24 @@ export default class QuoteAmendment extends LightningElement {
             ...updates.map(u => updateQuoteLine({ ql: u })),
             ...amendedLines.map(i => insertQuoteLine({ ql: i }))
         ])
-            .then(() => refreshApex(this.wiredQuoteLinesResult))
-            .catch(error => console.error('Save Error:', JSON.stringify(error)));
+            .then(() => { return refreshApex(this.wiredQuoteLinesResult);
+            })
+            .then(() => {
+                this.showToast('Success', 'Changes saved and data refreshed.', 'success');
+            })
+            .catch(error => {
+                console.error('Save Error:', JSON.stringify(error));
+                this.showToast('Error', 'Failed to save changes.', 'error');
+            });
+    }
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title,
+            message,
+            variant
+        });
+        this.dispatchEvent(evt);
     }
 
 
