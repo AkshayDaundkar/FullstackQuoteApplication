@@ -75,6 +75,14 @@ public with sharing class QuoteLineController {
     }
 
     // 3. Insert new QuoteLine
+    /**
+     * Inserts a new QuoteLine record into the database. 
+     * This method is used to create a new SBQQ_QuoteLine__c record with the provided details.
+     * It handles exceptions and returns the inserted record.
+     * @param ql The SBQQ_QuoteLine__c record to be inserted.
+     * @return The inserted SBQQ_QuoteLine__c record.
+     * @throws AuraHandledException if the insert operation fails.
+     */
     @AuraEnabled
     public static SBQQ_QuoteLine__c insertQuoteLine(SBQQ_QuoteLine__c ql) {
         try {
@@ -87,6 +95,14 @@ public with sharing class QuoteLineController {
 
 
     // 4. Update QuoteLine
+    /**
+     * Updates an existing QuoteLine record in the database.
+     * This method is used to modify the details of an SBQQ_QuoteLine__c record.
+     * It handles exceptions and returns the updated record.
+     * @param ql The SBQQ_QuoteLine__c record to be updated.
+     * @return The updated SBQQ_QuoteLine__c record.
+     * @throws AuraHandledException if the update operation fails.
+     */
     @AuraEnabled
     public static SBQQ_QuoteLine__c updateQuoteLine(SBQQ_QuoteLine__c ql) {
         try {
@@ -98,12 +114,27 @@ public with sharing class QuoteLineController {
     }
 
     // 5. Delete QuoteLine
+    /**
+     * Deletes a QuoteLine record from the database.
+     * This method is used to remove an SBQQ_QuoteLine__c record based on its Id.
+     * It handles exceptions and does not return any value.
+     * @param quoteLineId The Id of the SBQQ_QuoteLine__c record to be deleted.
+     * @throws AuraHandledException if the delete operation fails.
+     */
     @AuraEnabled
     public static void deleteQuoteLine(Id quoteLineId) {
         delete [SELECT Id FROM SBQQ_QuoteLine__c WHERE Id = :quoteLineId];
     }
 
     //6 Cancel QuoteLines
+    /**
+     * Cancels QuoteLines by setting their quantity to 0 and marking them as cancelled.
+     * This method handles both original QuoteLines and their amendments:
+     * - If a QuoteLine is an original line, it will be updated to have a quantity of 0 and an amendment type of 'Cancel Product'.
+     * - If a QuoteLine is an amendment, it will be deleted, and the original line will be updated to have an amendment type of 'Cancel Product'.
+     * If a QuoteLine is an amendment, it will be deleted, and the original line will be updated.
+     * @param quoteLineIds List of QuoteLine Ids to cancel.
+     */
     @AuraEnabled
     public static void cancelQuoteLines(List<Id> quoteLineIds) {
         List<SBQQ_QuoteLine__c> linesToUpdate = new List<SBQQ_QuoteLine__c>();
@@ -143,6 +174,13 @@ public with sharing class QuoteLineController {
     }
 
     //7 Undo Amendments
+    /**
+     * Undoes amendments by deleting amended QuoteLines and restoring the original QuoteLines.
+     * This method retrieves the original QuoteLines based on the SBQQ_AmendedFrom__c field,
+     * sets their quantity to 1, and clears the amendment type.
+     * It deletes the amended QuoteLines and updates the original QuoteLines.
+     * @param amendedQuoteLineIds List of QuoteLine Ids that have been amended.
+     */
     @AuraEnabled
     public static void undoAmendments(List<Id> amendedQuoteLineIds) {
         List<SBQQ_QuoteLine__c> amendedLines = [SELECT Id, SBQQ_AmendedFrom__c FROM SBQQ_QuoteLine__c WHERE Id IN :amendedQuoteLineIds];

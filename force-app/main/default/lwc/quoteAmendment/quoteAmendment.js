@@ -67,7 +67,7 @@ export default class QuoteAmendment extends LightningElement {
             typeAttributes: { label: { fieldName: 'Name' }, target: '_blank' }
         },
         { label: 'Product Code', fieldName: 'SBQQ_ProductCode__c' },
-        { label: 'Order Account Name', fieldName: 'SBQQ_OrderAccount__r.Name' },
+        { label: 'Order Account Name', fieldName: 'SBQQ_OrderAccount__c' },
         { label: 'Quantity', fieldName: 'SBQQ_Quantity__c', type: 'number', editable: true },
         { label: 'Net Price', fieldName: 'SBQQ_NetPrice__c', type: 'currency', editable: true },
         { label: 'Amend Type', fieldName: 'SBQQ_AmendType__c' },
@@ -119,7 +119,7 @@ export default class QuoteAmendment extends LightningElement {
         const csvRows = this.quoteLines.map(line => [
             line.Name,
             line.SBQQ_ProductCode__c || '',
-            line.SBQQ_OrderAccount__r?.Name || '',
+            line.SBQQ_OrderAccount__c || '',
             line.SBQQ_Quantity__c || '',
             line.SBQQ_NetPrice__c || '',
             line.SBQQ_AmendType__c || '',
