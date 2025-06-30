@@ -117,8 +117,13 @@ force-app/
    - Tab label shows the number of products.
 
 ---
+## Additional Features Added In Code
 
-## Future Enhancements
+- **Original Quantity and Price Tracking:**  
+  When amending a QuoteLine, the original quantity and price are now stored in custom fields (`SBQQ_OriginalQuantity__c` and `SBQQ_OriginalNetPrice__c`). This allows the undo amendment feature to accurately restore the previous values, not just set a default.
+
+- **Robust Undo Amendment:**  
+  The undo logic now restores both quantity and price from the stored fields, ensuring data integrity and a better user experience.
 
 - **Modularization**:  
   Extract the QuoteLines datatable into a separate LWC for better code reuse and maintainability.
@@ -139,6 +144,9 @@ force-app/
 - **Field Customization**:  
   Allow admin configuration of which fields are displayed/edited.
 
+---
+
+## Future Enhancements
 - **Audit Trail**:  
   Track amendment/cancellation history for compliance.
 
