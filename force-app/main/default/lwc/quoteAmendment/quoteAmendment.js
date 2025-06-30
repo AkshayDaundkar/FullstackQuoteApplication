@@ -137,25 +137,47 @@ export default class QuoteAmendment extends LightningElement {
         link.click();
     }
 
-    handleSaveChanges(event) {
-        const draftValues = event.detail.draftValues;
+   handleSaveChanges(event) {
+        const rawDrafts = event.detail.draftValues;
         const updates = [], amendedLines = [];
 
-        draftValues.forEach(draft => {
+        // Step 1: Merge draftValues by Id (in case both fields were edited separately)
+        const mergedDrafts = {};
+        rawDrafts.forEach(draft => {
+            const id = draft.Id;
+            if (!mergedDrafts[id]) {
+                mergedDrafts[id] = { Id: id };
+            }
+            Object.assign(mergedDrafts[id], draft);
+        });
+
+        // Step 2: Process each merged draft
+        Object.values(mergedDrafts).forEach(draft => {
             const original = this.quoteLines.find(line => line.Id === draft.Id);
             if (!original) return;
 
-            const newQuantity = draft.SBQQ_Quantity__c !== undefined ? draft.SBQQ_Quantity__c : original.SBQQ_Quantity__c;
-            const newPrice = draft.SBQQ_NetPrice__c !== undefined ? draft.SBQQ_NetPrice__c : original.SBQQ_NetPrice__c;
+            const newQuantity = draft.hasOwnProperty('SBQQ_Quantity__c')
+                ? draft.SBQQ_Quantity__c
+                : original.SBQQ_Quantity__c;
+
+            const newPrice = draft.hasOwnProperty('SBQQ_NetPrice__c')
+                ? draft.SBQQ_NetPrice__c
+                : original.SBQQ_NetPrice__c;
 
             const quantityChanged = newQuantity !== original.SBQQ_Quantity__c;
             const priceChanged = newPrice !== original.SBQQ_NetPrice__c;
 
             if (!quantityChanged && !priceChanged) return;
 
-            const amendType = [];
-            if (quantityChanged) amendType.push("Change Quantity");
-            if (priceChanged) amendType.push("Change Price");
+            let amendType = '';
+            if (quantityChanged && priceChanged) {
+                amendType = 'Change Both';
+            } else if (quantityChanged) {
+                amendType = 'Change Quantity';
+            } else if (priceChanged) {
+                amendType = 'Change Price';
+}
+
 
             amendedLines.push({
                 SBQQ_Quote__c: original.SBQQ_Quote__c,
@@ -165,12 +187,15 @@ export default class QuoteAmendment extends LightningElement {
                 SBQQ_Quantity__c: newQuantity,
                 SBQQ_NetPrice__c: newPrice,
                 SBQQ_AmendedFrom__c: original.Id,
-                SBQQ_AmendType__c: amendType.join('; '),
+                SBQQ_AmendType__c: amendType,
                 SBQQ_OriginalQuantity__c: original.SBQQ_Quantity__c,
                 SBQQ_OriginalNetPrice__c: original.SBQQ_NetPrice__c
             });
 
-            updates.push({ Id: original.Id, SBQQ_Quantity__c: 0 });
+            updates.push({
+                Id: original.Id,
+                SBQQ_Quantity__c: 0
+            });
         });
 
         Promise.all([
