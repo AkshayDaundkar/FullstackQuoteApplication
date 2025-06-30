@@ -145,7 +145,6 @@ export default class QuoteAmendment extends LightningElement {
             const original = this.quoteLines.find(line => line.Id === draft.Id);
             if (!original) return;
 
-            // Handle fallback to original if draft value is undefined
             const newQuantity = draft.SBQQ_Quantity__c !== undefined ? draft.SBQQ_Quantity__c : original.SBQQ_Quantity__c;
             const newPrice = draft.SBQQ_NetPrice__c !== undefined ? draft.SBQQ_NetPrice__c : original.SBQQ_NetPrice__c;
 
@@ -166,7 +165,9 @@ export default class QuoteAmendment extends LightningElement {
                 SBQQ_Quantity__c: newQuantity,
                 SBQQ_NetPrice__c: newPrice,
                 SBQQ_AmendedFrom__c: original.Id,
-                SBQQ_AmendType__c: amendType.join('; ')
+                SBQQ_AmendType__c: amendType.join('; '),
+                SBQQ_OriginalQuantity__c: original.SBQQ_Quantity__c,
+                SBQQ_OriginalNetPrice__c: original.SBQQ_NetPrice__c
             });
 
             updates.push({ Id: original.Id, SBQQ_Quantity__c: 0 });
@@ -179,5 +180,6 @@ export default class QuoteAmendment extends LightningElement {
             .then(() => refreshApex(this.wiredQuoteLinesResult))
             .catch(error => console.error('Save Error:', JSON.stringify(error)));
     }
+
 
 }

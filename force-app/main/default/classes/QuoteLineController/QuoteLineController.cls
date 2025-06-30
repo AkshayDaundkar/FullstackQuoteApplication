@@ -183,27 +183,43 @@ public with sharing class QuoteLineController {
      */
     @AuraEnabled
     public static void undoAmendments(List<Id> amendedQuoteLineIds) {
-        List<SBQQ_QuoteLine__c> amendedLines = [SELECT Id, SBQQ_AmendedFrom__c FROM SBQQ_QuoteLine__c WHERE Id IN :amendedQuoteLineIds];
-        List<SBQQ_QuoteLine__c> originalsToRestore = new List<SBQQ_QuoteLine__c>();
+        List<SBQQ_QuoteLine__c> amendedLines = [
+            SELECT Id, SBQQ_AmendedFrom__c, SBQQ_OriginalQuantity__c, SBQQ_OriginalNetPrice__c
+            FROM SBQQ_QuoteLine__c
+            WHERE Id IN :amendedQuoteLineIds
+        ];
+
         Set<Id> originalIds = new Set<Id>();
+        Map<Id, SBQQ_QuoteLine__c> amendmentMap = new Map<Id, SBQQ_QuoteLine__c>();
 
         for (SBQQ_QuoteLine__c line : amendedLines) {
             if (line.SBQQ_AmendedFrom__c != null) {
                 originalIds.add(line.SBQQ_AmendedFrom__c);
+                amendmentMap.put(line.SBQQ_AmendedFrom__c, line);
             }
         }
 
         if (!originalIds.isEmpty()) {
-            originalsToRestore = [SELECT Id, SBQQ_Quantity__c, SBQQ_NetPrice__c FROM SBQQ_QuoteLine__c WHERE Id IN :originalIds];
-            for (SBQQ_QuoteLine__c orig : originalsToRestore) {
-                orig.SBQQ_Quantity__c = 1; 
-                orig.SBQQ_AmendType__c = null;
-            }
-        }
+            List<SBQQ_QuoteLine__c> originalsToRestore = [
+                SELECT Id, SBQQ_Quantity__c, SBQQ_NetPrice__c, SBQQ_AmendType__c
+                FROM SBQQ_QuoteLine__c
+                WHERE Id IN :originalIds
+            ];
 
-        delete amendedLines;
-        update originalsToRestore;
+            for (SBQQ_QuoteLine__c orig : originalsToRestore) {
+                SBQQ_QuoteLine__c amendment = amendmentMap.get(orig.Id);
+                if (amendment != null) {
+                    orig.SBQQ_Quantity__c = amendment.SBQQ_OriginalQuantity__c;
+                    orig.SBQQ_NetPrice__c = amendment.SBQQ_OriginalNetPrice__c;
+                    orig.SBQQ_AmendType__c = null;
+                }
+            }
+
+            delete amendedLines;
+            update originalsToRestore;
+        }
     }
+
 
 
 }
